@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { Alert } from "@/design-system/components/alert";
 import { Card } from "@/design-system/components/card";
@@ -14,6 +15,8 @@ import {
   getProviders,
   getSimulation,
 } from "@/lib/compuerta/demo";
+import { simulate } from "@/lib/compuerta/sim";
+import type { SimConfig, SimResult } from "@/lib/compuerta/types";
 
 const SIM = getSimulation();
 const BASE = getBaseline();
@@ -32,6 +35,26 @@ function pct(v: number) {
 }
 
 export default function AppPage() {
+  const [injectOutage, setInjectOutage] = useState(true);
+  const [errorRate, setErrorRate] = useState(0.01);
+  const [hedgeEnabled, setHedgeEnabled] = useState(true);
+  const [result, setResult] = useState<SimResult | null>(null);
+
+  function run() {
+    const config: SimConfig = {
+      ...CONFIG,
+      providers: CONFIG.providers.map((p) => ({ ...p, errorRate })),
+      classes: {
+        ...CONFIG.classes,
+        long: { ...CONFIG.classes.long, hedged: hedgeEnabled },
+      },
+      outage: injectOutage
+        ? CONFIG.outage
+        : { ...CONFIG.outage, startTick: 0, endTick: 0 },
+    };
+    setResult(simulate(config));
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-10 border-b border-[var(--border)] bg-background/80 backdrop-blur-md">
@@ -85,6 +108,89 @@ export default function AppPage() {
           <MetricCard label="Failovers" value={getFailoverCount()} hint="eventos de reruteo" />
           <MetricCard label="Hedged calls" value={SIM.hedgedCalls} hint="sobrecoste documentado" tone="warning" />
         </div>
+
+        {/* ── LIVE SIMULATION ─────────────────── */}
+        <section>
+          <h2 className="text-lg font-semibold tracking-tight text-foreground mb-1">Simulación en vivo</h2>
+          <p className="text-sm text-muted-foreground mb-5">
+            Configura el error rate, el hedging y el outage, y ejecuta la simulación determinista.
+            El breaker es la lógica real; los providers son stand-ins sin red.
+          </p>
+
+          <Card className="p-4">
+            <div className="flex items-center justify-between mb-4">
+              <label htmlFor="outage" className="text-sm text-foreground">Inyectar outage</label>
+              <input
+                id="outage"
+                type="checkbox"
+                checked={injectOutage}
+                onChange={(e) => setInjectOutage(e.target.checked)}
+                className="h-4 w-4 accent-foreground"
+              />
+            </div>
+
+            <div className="flex items-center justify-between mb-1">
+              <span className="text-sm text-foreground">Error rate (providers)</span>
+              <span className="font-mono text-sm tabular-nums text-foreground">{errorRate.toFixed(2)}</span>
+            </div>
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.01}
+              value={errorRate}
+              onChange={(e) => setErrorRate(Number(e.target.value))}
+              className="w-full accent-foreground"
+            />
+
+            <div className="flex items-center justify-between mt-4 mb-4">
+              <label htmlFor="hedge" className="text-sm text-foreground">Hedged calls (clase long)</label>
+              <input
+                id="hedge"
+                type="checkbox"
+                checked={hedgeEnabled}
+                onChange={(e) => setHedgeEnabled(e.target.checked)}
+                className="h-4 w-4 accent-foreground"
+              />
+            </div>
+
+            <button
+              onClick={run}
+              className="w-full rounded-[var(--radius-md)] bg-accent px-4 py-2.5 text-sm font-medium text-[#ffffff] hover:bg-accent/90 transition-colors"
+            >
+              Ejecutar simulación
+            </button>
+          </Card>
+
+          {result && (
+            <Card className="mt-4 p-5">
+              <div className="flex items-center gap-3">
+                <StatusBadge tone={injectOutage ? "danger" : "success"} dot>
+                  {injectOutage ? "outage activo" : "sin outage"}
+                </StatusBadge>
+                <span className="text-sm text-muted-foreground">
+                  {result.success}/{result.nTicks} requests ok
+                </span>
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-4">
+                <MetricCard label="Disponibilidad" value={pct(result.availability)} hint="en esta corrida" tone="success" />
+                <MetricCard label="Failovers" value={result.failoverEvents} hint="eventos de reruteo" />
+                <MetricCard label="Hedged calls" value={result.hedgedCalls} hint="sobrecoste" tone="warning" />
+                <MetricCard label="Coste total" value={`$${result.totalCost.toFixed(2)}`} hint="incl. hedges" />
+              </div>
+              <div className="mt-4 space-y-2 font-mono text-xs">
+                {Object.entries(result.trips).map(([id, n]) => (
+                  <div key={id} className="flex items-center justify-between">
+                    <span className="text-muted-foreground">{id}</span>
+                    <StatusBadge tone={n > 0 ? "danger" : "success"}>
+                      {n > 0 ? `${n} trips` : "sin trips"}
+                    </StatusBadge>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          )}
+        </section>
 
         {/* ── OUTAGE NARRATIVE ────────────────── */}
         <section>
