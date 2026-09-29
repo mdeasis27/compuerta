@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "message": "429 Too Many Requests", "expected": "rate_limit" },
+    { "message": "request timed out", "expected": "timeout" },
+    { "message": "401 Unauthorized", "expected": "auth" },
+    { "message": "403 Forbidden", "expected": "auth" },
+    { "message": "content filter triggered", "expected": "content_filter" },
+    { "message": "500 Internal Server Error", "expected": "server" },
+    { "message": "503 Service Unavailable", "expected": "server" },
+    { "message": "something weird happened", "expected": "unknown" }
+  ]
+}

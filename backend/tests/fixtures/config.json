@@ -1,0 +1,16 @@
+{
+  "providers": [
+    { "id": "falcon", "baseLatencyMs": 65, "jitterMs": 20, "errorRate": 0.01, "costPer1k": 0.6 },
+    { "id": "heron", "baseLatencyMs": 30, "jitterMs": 10, "errorRate": 0.02, "costPer1k": 0.8 },
+    { "id": "osprey", "baseLatencyMs": 55, "jitterMs": 20, "errorRate": 0.01, "costPer1k": 0.4 }
+  ],
+  "classes": {
+    "cheap": { "preference": ["heron", "osprey", "falcon"], "hedged": false, "tokens": 120 },
+    "long": { "preference": ["falcon", "heron", "osprey"], "hedged": true, "hedgeBudgetMs": 70, "tokens": 900 }
+  },
+  "breaker": { "windowSize": 20, "errorThreshold": 0.25, "p95BudgetMs": 120, "cooldown": 10 },
+  "outage": { "provider": "falcon", "startTick": 100, "endTick": 160 },
+  "tenants": ["acme", "beta", "gamma"],
+  "nTicks": 300,
+  "lcg": { "seed": 42, "a": 1664525, "c": 1013904223, "m": 4294967296 }
+}

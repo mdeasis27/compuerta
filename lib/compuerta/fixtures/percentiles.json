@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "values": [1, 2, 3, 4], "q": 50, "expected": 2.5 },
+    { "values": [1, 2, 3, 4], "q": 95, "expected": 3.85 },
+    { "values": [1, 2, 3, 4], "q": 99, "expected": 3.97 },
+    { "values": [1, 1, 2, 2, 3, 3], "q": 50, "expected": 2.0 },
+    { "values": [1, 1, 2, 2, 3, 3], "q": 95, "expected": 3.0 },
+    { "values": [10, 20, 30], "q": 95, "expected": 29.0 },
+    { "values": [10, 20, 30], "q": 99, "expected": 29.8 },
+    { "values": [5], "q": 95, "expected": 5.0 }
+  ]
+}

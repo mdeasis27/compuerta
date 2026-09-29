@@ -1,0 +1,10 @@
+{
+  "availability": 1.0,
+  "baselineAvailability": 0.8966666666666666,
+  "failoverEvents": 11,
+  "hedgedCalls": 89,
+  "tripsFalcon": 1,
+  "finalStateFalcon": "closed",
+  "totalCost": 164.832,
+  "nTicks": 300
+}
