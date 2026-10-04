@@ -48,6 +48,10 @@ describe("pinned fixture: simulation", () => {
     expect(sim.hedgedCalls).toBe(simFixture.hedgedCalls);
     expect(sim.trips.falcon).toBe(simFixture.tripsFalcon);
     expect(sim.finalBreakerStates.falcon).toBe(simFixture.finalStateFalcon);
-    expect(sim.totalCost).toBeCloseTo(simFixture.totalCost, 3);
+    expect(sim.totalCostCents).toBe(simFixture.totalCostCents);
+    expect(sim.costCentsByTenant).toEqual(simFixture.costCentsByTenant);
+    expect(sim.costCentsByFeature).toEqual(simFixture.costCentsByFeature);
+    expect(Object.values(sim.costCentsByTenant).reduce((a, b) => a + b, 0)).toBe(sim.totalCostCents);
+    expect(Object.values(sim.costCentsByFeature).reduce((a, b) => a + b, 0)).toBe(sim.totalCostCents);
   });
 });

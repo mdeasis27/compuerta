@@ -9,7 +9,7 @@ export interface ProviderConfig {
   baseLatencyMs: number;
   jitterMs: number;
   errorRate: number;
-  costPer1k: number;
+  costCentsPer1k: number;
 }
 
 export interface RequestClassConfig {
@@ -57,7 +57,7 @@ export interface SimResult {
   trips: Record<string, number>;
   finalBreakerStates: Record<string, ProviderState>;
   events: BreakerEvent[];
-  totalCost: number;
-  costByTenant: Record<string, number>;
-  costByFeature: Record<string, number>;
+  totalCostCents: number;
+  costCentsByTenant: Record<string, number>;
+  costCentsByFeature: Record<string, number>;
 }

@@ -1,0 +1,1 @@
+export function traceCopy(locale:"en"|"es",key:string){const es=locale==="es";return ({trip:es?"circuito abierto":"circuit opened",recover:es?"circuito recuperado":"circuit recovered",reopen:es?"circuito reabierto":"circuit reopened"}[key]??key);}

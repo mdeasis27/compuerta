@@ -1,0 +1,51 @@
+{
+  "repository": "compuerta",
+  "scope": "Real React component with controlled locale; Next routes not tested.",
+  "checks": [
+    {
+      "locale": "en",
+      "scenarios": [
+        {
+          "preset": "With backup\nOutage from tick 8 to 20; alternate route enabled.",
+          "outcome": "Continuity activated\n\nProtected availability: 100%; baseline: 60%."
+        },
+        {
+          "preset": "Without backup\nThe same outage; alternate route disabled.",
+          "outcome": "No alternate route\n\nProtected availability: 57%; baseline: 60%."
+        }
+      ],
+      "mobileNoOverflow": true,
+      "reducedMotion": true,
+      "keyboard": true,
+      "noRequests": true,
+      "sceneChangesWithScenario": true,
+      "editingClearsPresetAndTrace": true,
+      "resetRestoresFirstPreset": true,
+      "cancelControlPresent": true,
+      "presetRestoresAllInputs": true
+    },
+    {
+      "locale": "es",
+      "scenarios": [
+        {
+          "preset": "Con respaldo\nCaída del tick 8 al 20; ruta alternativa activa.",
+          "outcome": "Continuidad activada\n\nDisponibilidad protegida: 100%; base: 60%."
+        },
+        {
+          "preset": "Sin respaldo\nLa misma caída; ruta alternativa desactivada.",
+          "outcome": "Sin ruta alternativa\n\nDisponibilidad protegida: 57%; base: 60%."
+        }
+      ],
+      "mobileNoOverflow": true,
+      "reducedMotion": true,
+      "keyboard": true,
+      "noRequests": true,
+      "sceneChangesWithScenario": true,
+      "editingClearsPresetAndTrace": true,
+      "resetRestoresFirstPreset": true,
+      "cancelControlPresent": true,
+      "presetRestoresAllInputs": true
+    }
+  ],
+  "errors": []
+}

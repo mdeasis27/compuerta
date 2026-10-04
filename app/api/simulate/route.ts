@@ -8,11 +8,13 @@ export async function POST(request: Request) {
   let injectOutage: boolean;
   let errorRate: number | undefined;
   try {
-    const body = await request.json();
-    injectOutage = body.injectOutage === true;
+    const body: unknown = await request.json();
+    if (typeof body !== "object" || body === null) throw new Error("Invalid JSON object");
+    const payload = body as Record<string, unknown>;
+    injectOutage = payload.injectOutage === true;
     errorRate =
-      typeof body.errorRate === "number" && Number.isFinite(body.errorRate)
-        ? body.errorRate
+      typeof payload.errorRate === "number" && Number.isFinite(payload.errorRate)
+        ? payload.errorRate
         : undefined;
   } catch {
     return NextResponse.json({ error: "Cuerpo JSON inválido" }, { status: 400 });
@@ -43,7 +45,9 @@ export async function POST(request: Request) {
     success: result.success,
     failoverEvents: result.failoverEvents,
     hedgedCalls: result.hedgedCalls,
-    totalCost: result.totalCost,
+    totalCostCents: result.totalCostCents,
+    costCentsByTenant: result.costCentsByTenant,
+    costCentsByFeature: result.costCentsByFeature,
     trips: result.trips,
     totalTrips,
   });

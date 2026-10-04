@@ -1,0 +1,40 @@
+{
+  "en": {
+    "user": "Service continuity owner",
+    "problem": "A primary provider outage leaves traffic without an explicit routing decision.",
+    "workflow": "Choose failover on or off, simulate breaker events, then inspect the route selected for traffic.",
+    "decision": "Enable continuity routing or rely on the primary path.",
+    "value": "Shows the operational consequence of the routing configuration before an outage drill.",
+    "visual": "Traffic moves through a breaker toward primary or fallback lanes.",
+    "scenarioA": {
+      "title": "Failover enabled",
+      "input": "Primary outage from tick 8 to 20; fallback enabled, hedging disabled.",
+      "observation": "Traffic can reroute after breaker events."
+    },
+    "scenarioB": {
+      "title": "Failover disabled",
+      "input": "Same outage from tick 8 to 20; fallback disabled.",
+      "observation": "Availability follows only the primary path."
+    },
+    "limitation": "The outage and routing events are local simulations, not provider health signals."
+  },
+  "es": {
+    "user": "Responsable de continuidad de servicio",
+    "problem": "Una caída del proveedor principal deja tráfico sin una decisión explícita de enrutamiento.",
+    "workflow": "Elige failover activado o desactivado, simula eventos de breaker e inspecciona la ruta seleccionada.",
+    "decision": "Activar enrutamiento de continuidad o depender de la ruta principal.",
+    "value": "Muestra la consecuencia operativa de la configuración antes de un simulacro de caída.",
+    "visual": "El tráfico pasa por un breaker hacia carriles principal o alterno.",
+    "scenarioA": {
+      "title": "Failover activado",
+      "input": "Caída principal de tick 8 a 20; respaldo activado, hedging desactivado.",
+      "observation": "El tráfico puede redirigirse tras eventos de breaker."
+    },
+    "scenarioB": {
+      "title": "Failover desactivado",
+      "input": "Misma caída de tick 8 a 20; respaldo desactivado.",
+      "observation": "La disponibilidad sigue solo la ruta principal."
+    },
+    "limitation": "Los eventos de caída y rutas son simulaciones locales, no señales de salud del proveedor."
+  }
+}

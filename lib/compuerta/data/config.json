@@ -1,8 +1,8 @@
 {
   "providers": [
-    { "id": "falcon", "baseLatencyMs": 65, "jitterMs": 20, "errorRate": 0.01, "costPer1k": 0.6 },
-    { "id": "heron", "baseLatencyMs": 30, "jitterMs": 10, "errorRate": 0.02, "costPer1k": 0.8 },
-    { "id": "osprey", "baseLatencyMs": 55, "jitterMs": 20, "errorRate": 0.01, "costPer1k": 0.4 }
+    { "id": "falcon", "baseLatencyMs": 65, "jitterMs": 20, "errorRate": 0.01, "costCentsPer1k": 60 },
+    { "id": "heron", "baseLatencyMs": 30, "jitterMs": 10, "errorRate": 0.02, "costCentsPer1k": 80 },
+    { "id": "osprey", "baseLatencyMs": 55, "jitterMs": 20, "errorRate": 0.01, "costCentsPer1k": 40 }
   ],
   "classes": {
     "cheap": { "preference": ["heron", "osprey", "falcon"], "hedged": false, "tokens": 120 },
