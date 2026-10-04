@@ -29,6 +29,7 @@ export function CompuertaScene({ frame, input, result, locale }: { frame: Playba
     </g>;
   };
   return <StoryStage locale={locale} title={copy.title} caption={copy.caption} step={frame.visible} total={frame.total}>
+    <p className="mb-2 text-sm text-muted-foreground sm:hidden">{copy.scrollHint}</p>
     <div className="overflow-x-auto" tabIndex={0} role="region" aria-label={copy.title}>
       <svg role="img" aria-label={copy.servedOf(s.served, result.nTicks)} viewBox="0 0 640 260" className="h-auto w-full min-w-[520px]">
         <path d={`M${NODES.clients.x + W} ${NODES.clients.y + H / 2}H${NODES.gateway.x}`} className="stroke-border" strokeWidth="2" />

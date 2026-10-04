@@ -16,14 +16,14 @@ const REPO = "https://github.com/mdeasis27/compuerta";
 export default function Page() {
   const locale = useLocale();
   const t = STORY[locale];
-  const [failover, setFailover] = useState(true);
+  const [failover, setFailover] = useState(false);
   const [outageEnd, setOutageEnd] = useState(20);
   const [prediction, setPrediction] = useState<string | null>(null);
   const demo = useDemoRun(runMission);
   const run = demo.run;
   const result = run?.result;
   const clear = () => { setPrediction(null); demo.reset(); };
-  const reset = () => { setFailover(true); setOutageEnd(20); clear(); };
+  const reset = () => { setFailover(false); setOutageEnd(20); clear(); };
   const input = { outageStart: 8, outageEnd, failover, hedge: false };
   const scene = (frame: typeof COMPLETE_FRAME) => run && result ? <CompuertaScene frame={frame} input={run.input} result={result.protected} locale={locale} /> : null;
 
@@ -39,7 +39,7 @@ export default function Page() {
     <StorySection index={2} heading={t.tryIt.heading} lead={t.tryIt.lead}>
       <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
         <section className="min-w-0 rounded-xl border border-border bg-surface p-5">
-          <MissionPrompt locale={locale} question={t.tryIt.question} prediction={prediction} onPredict={setPrediction} locked={Boolean(run) || demo.running} options={[{ id: "yes", label: t.tryIt.yes }, { id: "no", label: t.tryIt.no }]} />
+          <MissionPrompt locale={locale} question={t.tryIt.question(outageEnd, failover)} prediction={prediction} onPredict={setPrediction} locked={Boolean(run) || demo.running} options={[{ id: "yes", label: t.tryIt.yes }, { id: "no", label: t.tryIt.no }]} />
           <label className="mt-5 flex items-center gap-2 text-sm"><input type="checkbox" checked={failover} onChange={e => { setFailover(e.target.checked); clear(); }} /> {t.tryIt.backupLabel}</label>
           <label className="mt-5 block text-sm">{t.tryIt.outageEndLabel} <span className="font-mono">{outageEnd}</span>
             <input aria-label={t.tryIt.outageEndLabel} className="mt-2 w-full" type="range" min="10" max="28" value={outageEnd} onChange={e => { setOutageEnd(Number(e.target.value)); clear(); }} />

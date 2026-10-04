@@ -8,12 +8,12 @@ export interface CompuertaStory {
   chips: string[];
   analogy: { heading: Heading; paragraphs: string[]; dictionaryLabel: string; dictionary: { term: string; means: string }[] };
   why: { title: string; text: string };
-  tryIt: { heading: Heading; lead: string; question: string; yes: string; no: string; backupLabel: string; outageEndLabel: string; note: string; simulate: string; cancel: string; reset: string; error: string; idle: string };
+  tryIt: { heading: Heading; lead: string; question: (outageEnd: number, backup: boolean) => string; yes: string; no: string; backupLabel: string; outageEndLabel: string; note: string; simulate: string; cancel: string; reset: string; error: string; idle: string };
   compare: { heading: Heading; lead: string; on: string; off: string; served: string; sentence: (on: number, off: number) => string };
   fit: { heading: Heading; worthLabel: string; worth: string; notLabel: string; not: string };
   proves: { heading: Heading; text: string };
   engineers: { summary: string; points: string[]; repoLabel: string };
-  scene: { title: string; caption: string; tapeLabel: string; nodes: { clients: NodeCopy; gateway: NodeCopy; primary: NodeCopy; backup: NodeCopy }; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
+  scene: { title: string; caption: string; scrollHint: string; tapeLabel: string; nodes: { clients: NodeCopy; gateway: NodeCopy; primary: NodeCopy; backup: NodeCopy }; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
 }
 
 const engineerPointsEn = [
@@ -53,12 +53,12 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     tryIt: {
       heading: { before: "Try", accent: "it" },
       lead: "Thirty customers write to a support assistant. Partway through, the main provider stops answering.",
-      question: "Before you run it, place a bet: with an outage from request 8 to 20, do at least 24 of 30 customers get served?",
+      question: (end, backup) => `Before you run it, place a bet: ${backup ? "with" : "without"} the backup route and an outage from request 8 to ${end}, do at least 24 of 30 customers get served?`,
       yes: "Yes, 24 or more",
       no: "No, fewer than 24",
       backupLabel: "Use the backup route",
       outageEndLabel: "The outage ends at request",
-      note: "Each square is one customer request, not a second of real time. The backup can also fail now and then, like any real provider.",
+      note: "Each square is one customer request. The backup can also fail now and then, like any real provider.",
       simulate: "Run it",
       cancel: "Cancel",
       reset: "Start over",
@@ -73,7 +73,8 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
       served: "customers served",
       sentence: (on, off) => {
         const d = on - off;
-        if (d <= 0) return `Both setups served ${on} customers. This outage was too short to make a difference.`;
+        if (d === 0) return `Both setups served ${on} customers. This outage was too short to make a difference.`;
+        if (d < 0) return `This time the backup served fewer: ${on} customers with it, ${off} without it.`;
         return `With the backup, ${on} customers were served. Without it, ${off}. ${d === 1 ? "That's one person" : `That's ${d} people`} staring at a "try again later".`;
       },
     },
@@ -92,6 +93,7 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     scene: {
       title: "The route each request took",
       caption: "Watch the main provider turn red during the outage and the requests move to the backup.",
+      scrollHint: "Swipe the diagram sideways to see both providers →",
       tapeLabel: "Thirty customer requests, in order",
       nodes: {
         clients: { name: "Customers", sub: "30 requests", analogy: "the cars" },
@@ -126,12 +128,12 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     tryIt: {
       heading: { accent: "Pruébalo" },
       lead: "Treinta clientes le escriben a un asistente de soporte. A media jornada, el proveedor principal deja de contestar.",
-      question: "Antes de correrlo, apuesta: con una caída de la solicitud 8 a la 20, ¿se atiende a 24 de 30 clientes o no?",
+      question: (end, backup) => `Antes de correrlo, apuesta: ${backup ? "con" : "sin"} la ruta de respaldo y con una caída de la solicitud 8 a la ${end}, ¿se atiende al menos a 24 de los 30 clientes?`,
       yes: "Sí, 24 o más",
       no: "No, menos de 24",
       backupLabel: "Usar la ruta de respaldo",
       outageEndLabel: "La caída termina en la solicitud",
-      note: "Cada cuadrito es la solicitud de un cliente, no un segundo de tiempo real. El respaldo también puede fallar de vez en cuando, como cualquier proveedor real.",
+      note: "Cada cuadrito es la solicitud de un cliente. El respaldo también puede fallar de vez en cuando, como cualquier proveedor real.",
       simulate: "Correr",
       cancel: "Cancelar",
       reset: "Empezar de nuevo",
@@ -146,7 +148,8 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
       served: "clientes atendidos",
       sentence: (on, off) => {
         const d = on - off;
-        if (d <= 0) return `Las dos configuraciones atendieron a ${on} clientes. Esta caída fue demasiado corta para notar la diferencia.`;
+        if (d === 0) return `Las dos configuraciones atendieron a ${on} clientes. Esta caída fue demasiado corta para notar la diferencia.`;
+        if (d < 0) return `Esta vez el respaldo atendió a menos: ${on} clientes con él y ${off} sin él.`;
         return `Con respaldo se atendió a ${on} clientes. Sin respaldo, a ${off}. ${d === 1 ? "Es una persona que se quedó" : `Son ${d} personas que se quedaron`} viendo un "intenta más tarde".`;
       },
     },
@@ -165,6 +168,7 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     scene: {
       title: "La ruta que tomó cada solicitud",
       caption: "Mira cómo el proveedor principal se pone en rojo durante la caída y las solicitudes se pasan al respaldo.",
+      scrollHint: "Desliza el diagrama de lado para ver los dos proveedores →",
       tapeLabel: "Treinta solicitudes de clientes, en orden",
       nodes: {
         clients: { name: "Clientes", sub: "30 solicitudes", analogy: "los coches" },
