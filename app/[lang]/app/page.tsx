@@ -2,48 +2,82 @@
 import { useState } from "react";
 import { useLocale } from "@/design-system/i18n/context";
 import { TracePlayer } from "@/design-system/demo/trace-player";
-import { ScenarioPicker } from "@/design-system/demo/decision-lab";
-import { MissionBrief, MissionPrompt, MissionComparison, DecisionNotes } from "@/design-system/demo/mission-lab";
+import { MissionPrompt, MissionComparison } from "@/design-system/demo/mission-lab";
 import { useDemoRun } from "@/design-system/demo/use-demo-run";
+import { StoryHero, StorySection, AnalogyBlock, WhyIBuiltIt, FitGuide, ProvesBlock, EngineerNotes } from "@/design-system/demo/project-story";
 import { traceCopy } from "@/lib/experience/trace-copy";
 import { runMission } from "@/lib/experience/mission";
 import { CompuertaScene } from "@/lib/experience/compuerta-scene";
-export default function Page() {
-    const locale = useLocale();
-    const es = locale === "es";
-    const [failover, setFailover] = useState(true);
-    const [outageEnd, setOutageEnd] = useState(20);
-    const [scenario, setScenario] = useState("a");
-    const [prediction, setPrediction] = useState<string | null>(null);
-    const demo = useDemoRun(runMission);
-    const result = demo.run?.result;
-    const clear = () => { setPrediction(null); demo.reset(); };
-    const manual = (update: () => void) => { update(); setScenario(""); clear(); };
-    const choose = (id: string) => { setScenario(id); setOutageEnd(20); setFailover(id === "a"); clear(); };
-    const input = { outageStart: 8, outageEnd, failover, hedge: false };
-    return <main className="mx-auto max-w-6xl px-5 py-8 text-foreground sm:py-12">
-    <MissionBrief locale={locale} name="COMPUERTA" title={es ? "¿Seguirá funcionando durante una caída?" : "Will it keep working through an outage?"} context={es ? "El asistente de soporte depende de un proveedor que deja de responder. Decide si activas una ruta de respaldo y comprueba cuántas solicitudes terminan." : "A support assistant depends on a provider that stops responding. Decide whether to enable a backup route and check how many requests complete."} role={es ? "Responsable de continuidad" : "Continuity lead"} stakes={es ? "Disponibilidad del servicio" : "Service availability"}/>
-    <ScenarioPicker locale={locale} selected={scenario} onSelect={choose} options={[{ id: "a", label: es ? "Con respaldo" : "With backup", description: es ? "Caída del tick 8 al 20; ruta alternativa activa." : "Outage from tick 8 to 20; alternate route enabled." }, { id: "b", label: es ? "Sin respaldo" : "Without backup", description: es ? "La misma caída; ruta alternativa desactivada." : "The same outage; alternate route disabled." }]}/>
-    <div className="grid items-start gap-6 lg:grid-cols-[.8fr_1.2fr]">
-      <section className="min-w-0 rounded-xl border border-border p-5">
-    <button type="button" data-mission-challenge className="mb-6 rounded-lg border border-accent px-4 py-3 text-sm" onClick={() => manual(() => { setOutageEnd(27); setFailover(false); })}>{es ? "Probar el reto: caída prolongada sin respaldo" : "Try the challenge: extended outage without backup"} →</button>
+import { COMPLETE_FRAME } from "@/lib/experience/scene-state";
+import { STORY } from "@/lib/experience/story";
 
-        <label className="flex gap-2"><input checked={failover} onChange={e => manual(() => setFailover(e.target.checked))} type="checkbox"/> {es ? "Activar ruta de respaldo" : "Enable backup route"}</label>
-        <label className="mt-5 block">{es ? "La caída termina en tick" : "Outage ends at tick"} {outageEnd}<input aria-label={es ? "Final de la caída" : "Outage end"} className="mt-2 w-full" type="range" min="10" max="28" value={outageEnd} onChange={e => manual(() => setOutageEnd(Number(e.target.value)))}/></label>
-        <p className="mt-4 text-sm leading-6 text-muted-foreground">{es ? "30 ticks representan 30 solicitudes simuladas, no segundos reales. El respaldo también está sujeto a errores del simulador." : "30 ticks represent 30 simulated requests, not real seconds. The backup is also subject to simulator errors."}</p>
-        <MissionPrompt locale={locale} question={es ? "Con tu configuración, ¿se completarán al menos 24 de las 30 solicitudes simuladas?" : "With your configuration, will at least 24 of the 30 simulated requests complete?"} prediction={prediction} onPredict={setPrediction} locked={Boolean(demo.run) || demo.running} options={[{ id: "yes", label: es ? "Sí, al menos 24" : "Yes, at least 24" }, { id: "no", label: es ? "No, menos de 24" : "No, fewer than 24" }]}/>
-        <div className="mt-6 flex flex-wrap gap-2"><button data-run-experiment disabled={demo.running} className="min-w-0 flex-1 rounded-lg bg-accent px-4 py-3 text-white" onClick={() => demo.execute(input)}>{es ? "Simular" : "Simulate"}</button><button className="rounded-lg border px-3 py-3" onClick={demo.cancel}>{es ? "Cancelar" : "Cancel"}</button><button className="rounded-lg border px-3 py-3" onClick={() => choose("a")}>{es ? "Reiniciar" : "Reset"}</button></div>
-        {demo.error && <p role="alert" className="mt-3 text-danger">{es ? "No se pudo simular la caída." : "The outage could not be simulated."}</p>}
-      </section>
-      <section className="min-w-0">
-        {result && demo.run ? <TracePlayer collapsible translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={demo.run.executionMs} renderStage={frame => <>
-          <CompuertaScene frame={frame} input={demo.run!.input} result={result} locale={locale}/>
-          {frame.complete && <MissionComparison locale={locale} prediction={prediction} actual={result.protected.success >= 24 ? "yes" : "no"} actualLabel={es ? `Tu configuración completa ${result.protected.success} de 30 solicitudes.` : `Your configuration completes ${result.protected.success} of 30 requests.`} sides={[
-                        { label: es ? "Respaldo activado" : "Backup enabled", value: `${result.comparison.enabled.success} / 30`, detail: es ? `${(result.comparison.enabled.availability * 100).toFixed(1)}% de disponibilidad simulada.` : `${(result.comparison.enabled.availability * 100).toFixed(1)}% simulated availability.`, positive: result.comparison.enabled.success > result.comparison.disabled.success },
-                        { label: es ? "Respaldo desactivado" : "Backup disabled", value: `${result.comparison.disabled.success} / 30`, detail: es ? `${(result.comparison.disabled.availability * 100).toFixed(1)}% de disponibilidad simulada.` : `${(result.comparison.disabled.availability * 100).toFixed(1)}% simulated availability.` },
-                    ]} explanation={es ? "Se conserva la caída, las 30 solicitudes, el interruptor de circuito y la semilla. Solo cambia la ruta de respaldo. El simulador es determinista, pero las rutas consumen su secuencia de errores de forma distinta; esto no es una medición de un servicio real." : "The outage, 30 requests, circuit breaker and seed stay fixed. Only the backup route changes. The simulator is deterministic, but routing consumes its error sequence differently; this is not a measurement of a real service."}/>}</>}/> : <p className="rounded-xl border border-border p-6 text-muted-foreground">{es ? "Predice el resultado y simula. La comparación aparecerá al revelar la traza completa." : "Predict the outcome and simulate. The comparison appears when you reveal the full trace."}</p>}
-      </section>
-    </div>
-    <DecisionNotes locale={locale} implementation={es ? "Máquina de estados del interruptor de circuito, respaldo y simulador reproducible con semilla." : "Circuit-breaker state machine, backup routing and a reproducible seeded simulator."} rationale={es ? "Un respaldo puede preservar disponibilidad, pero añade complejidad. La demo aísla la política de ruta y no promete disponibilidad real." : "A backup can preserve availability but adds complexity. The demo isolates routing policy and does not promise real availability."} production={es ? "Validar errores correlacionados, tiempos de espera, límites de capacidad, observabilidad y recuperación con pruebas de carga e incidentes." : "Validate correlated failures, timeouts, capacity limits, observability and recovery with load and incident tests."}/>
+const REPO = "https://github.com/mdeasis27/compuerta";
+
+export default function Page() {
+  const locale = useLocale();
+  const t = STORY[locale];
+  const [failover, setFailover] = useState(true);
+  const [outageEnd, setOutageEnd] = useState(20);
+  const [prediction, setPrediction] = useState<string | null>(null);
+  const demo = useDemoRun(runMission);
+  const run = demo.run;
+  const result = run?.result;
+  const clear = () => { setPrediction(null); demo.reset(); };
+  const reset = () => { setFailover(true); setOutageEnd(20); clear(); };
+  const input = { outageStart: 8, outageEnd, failover, hedge: false };
+  const scene = (frame: typeof COMPLETE_FRAME) => run && result ? <CompuertaScene frame={frame} input={run.input} result={result.protected} locale={locale} /> : null;
+
+  return <main className="mx-auto max-w-5xl px-5 py-8 text-foreground sm:py-12">
+    <StoryHero name={t.name} oneLiner={t.oneLiner} chips={t.chips} />
+
+    <StorySection index={1} heading={t.analogy.heading}>
+      <AnalogyBlock paragraphs={t.analogy.paragraphs} dictionaryLabel={t.analogy.dictionaryLabel} dictionary={t.analogy.dictionary} />
+    </StorySection>
+
+    <WhyIBuiltIt title={t.why.title} text={t.why.text} />
+
+    <StorySection index={2} heading={t.tryIt.heading} lead={t.tryIt.lead}>
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,.8fr)_minmax(0,1.2fr)]">
+        <section className="min-w-0 rounded-xl border border-border bg-surface p-5">
+          <MissionPrompt locale={locale} question={t.tryIt.question} prediction={prediction} onPredict={setPrediction} locked={Boolean(run) || demo.running} options={[{ id: "yes", label: t.tryIt.yes }, { id: "no", label: t.tryIt.no }]} />
+          <label className="mt-5 flex items-center gap-2 text-sm"><input type="checkbox" checked={failover} onChange={e => { setFailover(e.target.checked); clear(); }} /> {t.tryIt.backupLabel}</label>
+          <label className="mt-5 block text-sm">{t.tryIt.outageEndLabel} <span className="font-mono">{outageEnd}</span>
+            <input aria-label={t.tryIt.outageEndLabel} className="mt-2 w-full" type="range" min="10" max="28" value={outageEnd} onChange={e => { setOutageEnd(Number(e.target.value)); clear(); }} />
+          </label>
+          <p className="mt-4 text-xs leading-5 text-muted-foreground">{t.tryIt.note}</p>
+          <div className="mt-6 flex flex-wrap gap-2">
+            <button type="button" data-run-experiment disabled={demo.running} className="min-w-0 flex-1 rounded-lg bg-accent px-4 py-3 text-sm font-medium text-white disabled:opacity-60" onClick={() => demo.execute(input)}>{t.tryIt.simulate}</button>
+            <button type="button" className="rounded-lg border border-border px-3 py-3 text-sm" onClick={demo.cancel}>{t.tryIt.cancel}</button>
+            <button type="button" className="rounded-lg border border-border px-3 py-3 text-sm" onClick={reset}>{t.tryIt.reset}</button>
+          </div>
+          {demo.error ? <p role="alert" className="mt-3 text-sm text-danger">{t.tryIt.error}</p> : null}
+        </section>
+        <section className="min-w-0">
+          {run && result
+            ? (demo.trace.length === 0 ? scene(COMPLETE_FRAME) : <TracePlayer collapsible translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={run.executionMs} renderStage={scene} />)
+            : <p className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">{t.tryIt.idle}</p>}
+        </section>
+      </div>
+    </StorySection>
+
+    <StorySection index={3} heading={t.compare.heading} lead={t.compare.lead}>
+      {result ? <MissionComparison locale={locale} prediction={prediction} actual={result.protected.success >= 24 ? "yes" : "no"} actualLabel={STORY[locale].scene.servedOf(result.protected.success, result.protected.nTicks)} explanation={t.compare.sentence(result.comparison.enabled.success, result.comparison.disabled.success)} sides={[
+        { label: t.compare.on, value: `${result.comparison.enabled.success} / ${result.comparison.enabled.nTicks}`, detail: t.compare.served, positive: result.comparison.enabled.success > result.comparison.disabled.success },
+        { label: t.compare.off, value: `${result.comparison.disabled.success} / ${result.comparison.disabled.nTicks}`, detail: t.compare.served },
+      ]} /> : null}
+    </StorySection>
+
+    <StorySection index={4} heading={t.fit.heading}>
+      <FitGuide worthLabel={t.fit.worthLabel} worth={t.fit.worth} notLabel={t.fit.notLabel} not={t.fit.not} />
+    </StorySection>
+
+    <StorySection index={5} heading={t.proves.heading}>
+      <ProvesBlock text={t.proves.text} />
+    </StorySection>
+
+    <EngineerNotes summary={t.engineers.summary}>
+      <ul className="list-disc space-y-2 pl-5">{t.engineers.points.map(p => <li key={p}>{p}</li>)}</ul>
+      <a className="mt-4 inline-block text-accent underline underline-offset-4" href={REPO}>{t.engineers.repoLabel} →</a>
+    </EngineerNotes>
   </main>;
 }
