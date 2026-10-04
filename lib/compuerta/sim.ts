@@ -29,6 +29,7 @@ export function simulate(config: SimConfig): SimResult {
   const costCentsByTenant: Record<string, number> = {};
   const costCentsByFeature: Record<string, number> = {};
   const events: SimResult["events"] = [];
+  const servedBy: (string | null)[] = [];
 
   for (const t of config.tenants) costCentsByTenant[t] = 0;
   for (const f of Object.keys(config.classes)) costCentsByFeature[f] = 0;
@@ -63,6 +64,7 @@ export function simulate(config: SimConfig): SimResult {
     const tenant = config.tenants[i % config.tenants.length];
 
     let succeeded = false;
+    let servedProvider: string | null = null;
 
     for (const providerId of cls.preference) {
       const p = providers.get(providerId)!;
@@ -76,6 +78,7 @@ export function simulate(config: SimConfig): SimResult {
       if (ok) {
         addCost(providerId, cls.tokens, tenant, feature);
         succeeded = true;
+        servedProvider = providerId;
 
         if (cls.hedged && latencyMs > (cls.hedgeBudgetMs ?? Number.POSITIVE_INFINITY)) {
           hedgedCalls += 1;
@@ -91,6 +94,7 @@ export function simulate(config: SimConfig): SimResult {
     }
 
     if (succeeded) success += 1;
+    servedBy.push(servedProvider);
   }
 
   const finalBreakerStates: Record<string, ProviderState> = {};
@@ -108,6 +112,7 @@ export function simulate(config: SimConfig): SimResult {
     trips,
     finalBreakerStates,
     events,
+    servedBy,
     totalCostCents,
     costCentsByTenant,
     costCentsByFeature,

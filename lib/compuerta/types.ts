@@ -57,6 +57,8 @@ export interface SimResult {
   trips: Record<string, number>;
   finalBreakerStates: Record<string, ProviderState>;
   events: BreakerEvent[];
+  /** Provider that served each tick, or null when the request was lost. */
+  servedBy: (string | null)[];
   totalCostCents: number;
   costCentsByTenant: Record<string, number>;
   costCentsByFeature: Record<string, number>;
