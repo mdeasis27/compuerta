@@ -54,7 +54,7 @@ export default function Page() {
         </section>
         <section className="min-w-0">
           {run && result
-            ? (demo.trace.length === 0 ? scene(COMPLETE_FRAME) : <TracePlayer collapsible translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={run.executionMs} renderStage={scene} />)
+            ? (demo.trace.length === 0 ? scene(COMPLETE_FRAME) : <TracePlayer collapsible autoPlay translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={run.executionMs} renderStage={scene} />)
             : <p className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">{t.tryIt.idle}</p>}
         </section>
       </div>
