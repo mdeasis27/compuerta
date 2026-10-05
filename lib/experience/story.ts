@@ -13,7 +13,7 @@ export interface CompuertaStory {
   fit: { heading: Heading; worthLabel: string; worth: string; notLabel: string; not: string };
   proves: { heading: Heading; text: string };
   engineers: { summary: string; points: string[]; repoLabel: string };
-  scene: { title: string; caption: string; scrollHint: string; tapeLabel: string; nodes: { clients: NodeCopy; gateway: NodeCopy; primary: NodeCopy; backup: NodeCopy }; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
+  scene: { title: string; caption: string; statusLabels: { active: string; danger: string; success: string; off: string }; tapeLabel: string; nodes: { clients: NodeCopy; gateway: NodeCopy; primary: NodeCopy; backup: NodeCopy }; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
 }
 
 const engineerPointsEn = [
@@ -93,7 +93,7 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     scene: {
       title: "The route each request took",
       caption: "Watch the main provider turn red during the outage and the requests move to the backup.",
-      scrollHint: "Swipe the diagram sideways to see both providers →",
+      statusLabels: { active: "picking the route", danger: "down", success: "on", off: "off" },
       tapeLabel: "Thirty customer requests, in order",
       nodes: {
         clients: { name: "Customers", sub: "30 requests", analogy: "the cars" },
@@ -168,7 +168,7 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     scene: {
       title: "La ruta que tomó cada solicitud",
       caption: "Mira cómo el proveedor principal se pone en rojo durante la caída y las solicitudes se pasan al respaldo.",
-      scrollHint: "Desliza el diagrama de lado para ver los dos proveedores →",
+      statusLabels: { active: "eligiendo la ruta", danger: "caído", success: "activo", off: "apagado" },
       tapeLabel: "Treinta solicitudes de clientes, en orden",
       nodes: {
         clients: { name: "Clientes", sub: "30 solicitudes", analogy: "los coches" },

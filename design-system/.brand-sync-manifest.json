@@ -1,6 +1,6 @@
 {
   "kit": "brand",
-  "syncedAt": "2026-10-04T19:30:58.218Z",
+  "syncedAt": "2026-10-05T19:47:11.073Z",
   "sourcePath": "C:\\Proyectos\\proyectos-portafolio\\portafolio-mdea\\design-system",
   "files": [
     ".brand-sync-manifest.json",
@@ -19,8 +19,10 @@
     "components\\status-dot.tsx",
     "components\\stepper.tsx",
     "components\\tone.ts",
+    "demo\\copy-lint.ts",
     "demo\\decision-lab.tsx",
     "demo\\demo-shell.tsx",
+    "demo\\flow-diagram.tsx",
     "demo\\foundation.node-test.mjs",
     "demo\\mission-lab.tsx",
     "demo\\outcome-tape.ts",

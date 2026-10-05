@@ -22,6 +22,9 @@ export default function Page() {
   const demo = useDemoRun(runMission);
   const run = demo.run;
   const result = run?.result;
+  // Section 03 waits for the tape to finish; keyed to the trace so every new run resets it.
+  const [playedTrace, setPlayedTrace] = useState<typeof demo.trace | null>(null);
+  const played = demo.trace.length === 0 || playedTrace === demo.trace;
   const clear = () => { setPrediction(null); demo.reset(); };
   const reset = () => { setFailover(false); setOutageEnd(20); clear(); };
   const input = { outageStart: 8, outageEnd, failover, hedge: false };
@@ -54,14 +57,14 @@ export default function Page() {
         </section>
         <section className="min-w-0">
           {run && result
-            ? (demo.trace.length === 0 ? scene(COMPLETE_FRAME) : <TracePlayer collapsible autoPlay translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={run.executionMs} renderStage={scene} />)
+            ? (demo.trace.length === 0 ? scene(COMPLETE_FRAME) : <TracePlayer collapsible autoPlay headingLevel="h3" onComplete={() => setPlayedTrace(demo.trace)} translate={key => traceCopy(locale, key)} trace={demo.trace} locale={locale} executionMs={run.executionMs} renderStage={scene} />)
             : <p className="rounded-xl border border-dashed border-border p-8 text-sm text-muted-foreground">{t.tryIt.idle}</p>}
         </section>
       </div>
     </StorySection>
 
     <StorySection index={3} heading={t.compare.heading} lead={t.compare.lead}>
-      {result ? <MissionComparison locale={locale} prediction={prediction} actual={result.protected.success >= 24 ? "yes" : "no"} actualLabel={STORY[locale].scene.servedOf(result.protected.success, result.protected.nTicks)} explanation={t.compare.sentence(result.comparison.enabled.success, result.comparison.disabled.success)} sides={[
+      {result && played ? <MissionComparison locale={locale} prediction={prediction} actual={result.protected.success >= 24 ? "yes" : "no"} actualLabel={STORY[locale].scene.servedOf(result.protected.success, result.protected.nTicks)} explanation={t.compare.sentence(result.comparison.enabled.success, result.comparison.disabled.success)} sides={[
         { label: t.compare.on, value: `${result.comparison.enabled.success} / ${result.comparison.enabled.nTicks}`, detail: t.compare.served, positive: result.comparison.enabled.success > result.comparison.disabled.success },
         { label: t.compare.off, value: `${result.comparison.disabled.success} / ${result.comparison.disabled.nTicks}`, detail: t.compare.served },
       ]} /> : null}
