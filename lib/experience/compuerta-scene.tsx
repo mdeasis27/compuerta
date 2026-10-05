@@ -23,7 +23,7 @@ export function CompuertaScene({ frame, input, result, locale }: { frame: Playba
   const target = s.packetOn === "backup" ? POS.backup : POS.primary;
   const packet = s.packetOn === "none" ? { x: POS.gateway.x + W / 2, y: POS.gateway.y + H / 2 } : { x: target.x - 12, y: target.y + H / 2 };
   return <StoryStage locale={locale} title={copy.title} caption={copy.caption} step={frame.visible} total={frame.total}>
-    <FlowDiagram nodes={nodes} width={640} height={260} ariaLabel={copy.servedOf(s.served, result.nTicks)} edges={[
+    <FlowDiagram nodes={nodes} width={640} height={260} ariaLabel={copy.servedOf(s.served, result.nTicks)} statusLabels={copy.statusLabels} edges={[
       { from: "clients", to: "gateway" },
       { from: "gateway", to: "primary", tone: s.primaryDown ? "danger" : "idle" },
       { from: "gateway", to: "backup", tone: input.failover ? "success" : "off" },
