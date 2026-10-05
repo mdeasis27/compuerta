@@ -1,15 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { STORY } from "./story";
-
-function strings(value: unknown): string[] {
-  if (typeof value === "string") return [value];
-  if (typeof value === "function") return [String((value as (a: number, b: number) => string)(27, 18)), String((value as (a: number, b: number) => string)(18, 18)), String((value as (a: number, b: number) => string)(19, 18))];
-  if (Array.isArray(value)) return value.flatMap(strings);
-  if (value && typeof value === "object") return Object.values(value).flatMap(strings);
-  return [];
-}
-
-const FORBIDDEN = [/—/, /\bsino\b/i, /en lugar de/i, /\bnot just\b/i, /\binstead of\b/i, /potenciar/i, /robust/i, /de un vistazo/i, /at a glance/i, /seamless/i, /leverag/i, /\bWaze\b/i];
+import { lintStory, storyStrings as strings } from "@/design-system/demo/copy-lint";
 
 describe("Compuerta story copy", () => {
   it("has the same shape in English and Spanish", () => {
@@ -28,7 +19,7 @@ describe("Compuerta story copy", () => {
   });
 
   it("avoids AI-sounding patterns and brand names", () => {
-    for (const locale of ["en", "es"] as const) for (const s of strings(STORY[locale])) for (const pattern of FORBIDDEN) expect(s, `${locale}: ${pattern}`).not.toMatch(pattern);
+    for (const locale of ["en", "es"] as const) expect(lintStory(STORY[locale]), locale).toEqual([]);
   });
 
   it("states the comparison truthfully, including ties and a single person", () => {
