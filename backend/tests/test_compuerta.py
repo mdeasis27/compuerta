@@ -76,4 +76,8 @@ def test_simulation_matches_fixture():
     assert sim["hedgedCalls"] == fixture["hedgedCalls"]
     assert sim["trips"]["falcon"] == fixture["tripsFalcon"]
     assert sim["finalBreakerStates"]["falcon"] == fixture["finalStateFalcon"]
-    assert sim["totalCost"] == pytest.approx(fixture["totalCost"], abs=1e-3)
+    assert sim["totalCostCents"] == fixture["totalCostCents"]
+    assert sim["costCentsByTenant"] == fixture["costCentsByTenant"]
+    assert sim["costCentsByFeature"] == fixture["costCentsByFeature"]
+    assert sum(sim["costCentsByTenant"].values()) == sim["totalCostCents"]
+    assert sum(sim["costCentsByFeature"].values()) == sim["totalCostCents"]

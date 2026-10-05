@@ -9,6 +9,12 @@ import { lcgFactory } from "./prng";
 import type { ProviderConfig, ProviderState, SimConfig, SimResult } from "./types";
 
 export function simulate(config: SimConfig): SimResult {
+  for (const provider of config.providers) {
+    if (!Number.isSafeInteger(provider.costCentsPer1k) || provider.costCentsPer1k < 0) throw new Error("Rates must be nonnegative safe integer cents.");
+  }
+  for (const cls of Object.values(config.classes)) {
+    if (!Number.isSafeInteger(cls.tokens) || cls.tokens < 0) throw new Error("Token counts must be nonnegative safe integers.");
+  }
   const rng = lcgFactory(config.lcg.seed, config.lcg.a, config.lcg.c, config.lcg.m);
 
   const providers = new Map<string, ProviderConfig>(config.providers.map((p) => [p.id, p]));
@@ -18,14 +24,14 @@ export function simulate(config: SimConfig): SimResult {
   let success = 0;
   let failoverEvents = 0;
   let hedgedCalls = 0;
-  let totalCost = 0;
+  let totalCostCents = 0;
   const trips: Record<string, number> = {};
-  const costByTenant: Record<string, number> = {};
-  const costByFeature: Record<string, number> = {};
+  const costCentsByTenant: Record<string, number> = {};
+  const costCentsByFeature: Record<string, number> = {};
   const events: SimResult["events"] = [];
 
-  for (const t of config.tenants) costByTenant[t] = 0;
-  for (const f of Object.keys(config.classes)) costByFeature[f] = 0;
+  for (const t of config.tenants) costCentsByTenant[t] = 0;
+  for (const f of Object.keys(config.classes)) costCentsByFeature[f] = 0;
 
   function providerResponse(p: ProviderConfig, i: number): { ok: boolean; latencyMs: number } {
     const errDraw = rng();
@@ -37,9 +43,16 @@ export function simulate(config: SimConfig): SimResult {
     return { ok: errDraw >= p.errorRate, latencyMs };
   }
 
-  function addCost(providerId: string, tokens: number) {
+  function addCost(providerId: string, tokens: number, tenant: string, feature: string) {
     const p = providers.get(providerId)!;
-    totalCost += (tokens / 1000) * p.costPer1k;
+    // Illustrative billing: round each successful or hedged call upward once.
+    // Exact integer division avoids fractional monetary intermediates.
+    const cents = (BigInt(tokens) * BigInt(p.costCentsPer1k) + BigInt(999)) / BigInt(1000);
+    if (cents > BigInt(Number.MAX_SAFE_INTEGER - totalCostCents)) throw new Error("Billing exceeds the safe integer range.");
+    const costCents = Number(cents);
+    totalCostCents += costCents;
+    costCentsByTenant[tenant] += costCents;
+    costCentsByFeature[feature] += costCents;
   }
 
   for (let i = 0; i < config.nTicks; i += 1) {
@@ -61,19 +74,14 @@ export function simulate(config: SimConfig): SimResult {
       if (event) events.push({ tick: i, provider: providerId, kind: event });
 
       if (ok) {
-        addCost(providerId, cls.tokens);
-        costByTenant[tenant] += (cls.tokens / 1000) * p.costPer1k;
-        costByFeature[feature] += (cls.tokens / 1000) * p.costPer1k;
+        addCost(providerId, cls.tokens, tenant, feature);
         succeeded = true;
 
         if (cls.hedged && latencyMs > (cls.hedgeBudgetMs ?? Number.POSITIVE_INFINITY)) {
           hedgedCalls += 1;
           const hedgeProvider = cls.preference.find((x) => x !== providerId);
           if (hedgeProvider) {
-            const hp = providers.get(hedgeProvider)!;
-            totalCost += (cls.tokens / 1000) * hp.costPer1k;
-            costByTenant[tenant] += (cls.tokens / 1000) * hp.costPer1k;
-            costByFeature[feature] += (cls.tokens / 1000) * hp.costPer1k;
+            addCost(hedgeProvider, cls.tokens, tenant, feature);
           }
         }
         break;
@@ -100,9 +108,9 @@ export function simulate(config: SimConfig): SimResult {
     trips,
     finalBreakerStates,
     events,
-    totalCost,
-    costByTenant,
-    costByFeature,
+    totalCostCents,
+    costCentsByTenant,
+    costCentsByFeature,
   };
 }
 

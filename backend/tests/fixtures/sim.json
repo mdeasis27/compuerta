@@ -1,10 +1,19 @@
 {
-  "availability": 1.0,
+  "availability": 1,
   "baselineAvailability": 0.8966666666666666,
   "failoverEvents": 11,
   "hedgedCalls": 89,
   "tripsFalcon": 1,
   "finalStateFalcon": "closed",
-  "totalCost": 164.832,
-  "nTicks": 300
+  "nTicks": 300,
+  "totalCostCents": 16543,
+  "costCentsByTenant": {
+    "acme": 5396,
+    "beta": 5540,
+    "gamma": 5607
+  },
+  "costCentsByFeature": {
+    "cheap": 1495,
+    "long": 15048
+  }
 }

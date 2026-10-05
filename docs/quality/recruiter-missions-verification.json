@@ -1,0 +1,27 @@
+{
+  "commands": [
+    {
+      "command": "pnpm.cmd test",
+      "exitCode": 0,
+      "log": "recruiter-missions-test.log"
+    },
+    {
+      "command": "pnpm.cmd run lint",
+      "exitCode": 0,
+      "log": "recruiter-missions-lint.log"
+    },
+    {
+      "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+      "exitCode": 0,
+      "log": "recruiter-missions-types.log"
+    },
+    {
+      "command": "pnpm.cmd run build",
+      "exitCode": 0,
+      "log": "recruiter-missions-build.log"
+    }
+  ],
+  "repository": "compuerta",
+  "branch": "feat/guided-recruiter-missions",
+  "scope": "Guided recruiter missions; current tests, lint, strict types and production build."
+}

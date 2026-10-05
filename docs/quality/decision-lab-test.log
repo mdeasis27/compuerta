@@ -1,0 +1,16 @@
+
+> compuerta@0.1.0 test C:\Proyectos\proyectos-portafolio\compuerta
+> vitest run
+
+(!) Your Vite config uses features that are unsupported by `configLoader: 'native'`, which is planned to become the default in a future major version of Vite:
+  - ESM syntax in a file loaded as CommonJS (vitest.config.ts:1:1). Use a `.mjs` extension or set `"type": "module"` in the closest package.json
+Set `VITE_CONFIG_NATIVE_IGNORE_WARNING=true` to suppress this warning.
+
+ RUN  v4.1.11 C:/Proyectos/proyectos-portafolio/compuerta
+
+
+ Test Files  7 passed (7)
+      Tests  31 passed (31)
+   Start at  20:28:38
+   Duration  848ms (transform 680ms, setup 0ms, import 1.13s, tests 86ms, environment 2ms)
+

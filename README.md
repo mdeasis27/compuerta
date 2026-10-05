@@ -1,109 +1,96 @@
-# Compuerta
+# Resilient routing
 
-**Self-healing LLM gateway** — circuit breakers per provider (closed/open/half-open),
-automatic failover by request class, hedged requests for latency-sensitive traffic, and
-cost attribution by tenant and feature.
+[Español](README.es.md) · [Try the demo](https://compuerta-manueldeasis27-2515s-projects.vercel.app/en/app) · [Case study](https://manueldeasis.com/en/projects/compuerta) · [Source](https://github.com/mdeasis27/compuerta)
 
-> **Result:** **100% availability (300/300)** sustained through a 60-tick outage of the
-> primary provider, vs **89.7% without failover** (**+10.3pp**). The breaker tripped once,
-> rerouted **11 requests**, re-probed 4 times during the outage (correctly rejected), and
-> closed itself on recovery — no operator intervention.
+![Actual interactive local interface](docs/images/cover.png)
 
----
+Change an outage window, workload and routing policy to compare availability.
 
-## Result
+## Two situations to compare
 
-### Availability through a simulated outage (300 requests, 3 providers)
+**Failover enabled:** Primary outage from tick 8 to 20; fallback enabled, hedging disabled. Traffic can reroute after breaker events.
 
-| Scenario | Availability | Requests saved |
-|---|---|---|
-| Single provider, no failover | 89.7% (269/300) | — |
-| **Gateway (breaker + failover)** | **100% (300/300)** | **31** |
+![Failover enabled](docs/images/scenario-a.png)
 
-The outage takes down `falcon` (the primary "long" class provider) for ticks 100–160.
-Without a gateway, every "long" request in that window fails. With the gateway:
+**Failover disabled:** Same outage from tick 8 to 20; fallback disabled. Availability follows only the primary path.
 
-1. **tick 111** — the breaker trips on `falcon`'s error rate (100% > 25% threshold over a
-   20-request window).
-2. **ticks 121–151** — the breaker goes half-open every cooldown and probes; each probe
-   fails (the provider is still down) and it reopens. 4 reopen events.
-3. **tick 161** — the outage ends; the next half-open probe succeeds and the breaker closes.
-4. Throughout, "long" requests reroute to `heron`/`osprey` — **11 failover events**, zero
-   user-visible failures.
+![Failover disabled](docs/images/scenario-b.png)
 
-### Circuit breaker
+## Business use case
 
-- **Trip on** error rate > 25% or p95 latency > 120ms over a 20-request sliding window.
-- **Half-open probes** are the self-healing mechanism: a small fraction of traffic returns
-  to a recovering provider; success closes the breaker, failure reopens it immediately.
+A primary provider outage leaves traffic without an explicit routing decision.
 
-### Hedged requests (documented overcost)
+**Who uses it:** Service continuity owner.
 
-**89 of 150** "long" calls exceeded the 70ms hedge budget, each firing a second provider
-(≈2× spend on that subset). Hedging is the price of a guaranteed p95 tail; the demo reports
-it rather than hiding it. Total cost with hedges: **$164.83**.
+**The decision:** Enable continuity routing or rely on the primary path.
 
-### Cost attribution
+Choose failover on or off, simulate breaker events, then inspect the route selected for traffic.
 
-| Tenant | Cost | | Feature | Cost |
-|---|---|---|---|---|
-| acme | $53.76 | | cheap | $14.35 |
-| beta | $55.20 | | long | $150.48 |
-| gamma | $55.87 | | | |
+### Try the decision
 
----
+**Failover enabled:** Primary outage from tick 8 to 20; fallback enabled, hedging disabled. Traffic can reroute after breaker events.
+
+**Failover disabled:** Same outage from tick 8 to 20; fallback disabled. Availability follows only the primary path.
+
+Choose a scenario, edit its controls and run the local computation. Step through the visual process or reveal all steps. Reset before comparing the second scenario.
+
+## How to try it
+
+Open `/en/app` (English, default) or `/es/app` (Spanish). Change the scenario inputs and run the computation. Inspect the resulting decision, evidence and computed trace. Playback reveals completed local steps; it does not measure a live model. Reset starts a new local scenario. Changing language resets the scenario.
+
+The primary demo needs no account, API key or database. Public links refer to the existing deployment; local redesign changes are pending publication.
+
+<!-- recruiter-mission:start -->
+### Your interactive mission
+
+Try an extended outage without backup, predict whether 24 of 30 requests will complete, simulate and reveal the full trace.
+
+Compare backup routing on and off under the same outage, circuit breaker and seed. The seeded error sequence is consumed differently by each route. This is a controlled simulation, not real service availability.
+
+**Why this approach:** An explicit circuit-breaker state machine makes failure and recovery inspectable. Backup routing can preserve continuity but introduces capacity and correlated-failure concerns.
+
+**Before production:** Validate correlated failures, timeouts, capacity limits, observability and recovery with load and incident tests. Simulator and API monetary fields now use explicit integer cents, with each successful and hedged call rounded upward once; failed attempts remain unbilled. These are illustrative billing assumptions.
+
+Editing inputs, choosing a preset or resetting clears the prediction and obsolete results. Comparisons appear only at completed playback; the primary demos need no account or key.
+
+The mission pilot updates this implementation. Existing screenshots and browser reports document the previous stage; fresh browser interaction checks and captures are pending because the current environment blocked them.
+![Recorded comparison from the previous stage](docs/images/mission.png)
+<!-- recruiter-mission:end -->
+
+## Local setup and verification
+
+Requires Node.js 22 and pnpm 10.
+
+```sh
+pnpm install --frozen-lockfile
+pnpm dev
+pnpm test
+node node_modules/typescript/bin/tsc --noEmit --incremental false
+pnpm lint
+pnpm build
+```
+
+Open `http://localhost:3000/en/app`. Recorded validation covers tests, lint, TypeScript and production builds. See [command results](docs/quality/decision-lab-verification.json) and [browser component checks](docs/quality/decision-lab-browser.json). The new browser checks exercise real React components and production CSS with controlled locale navigation; they do not certify Next routes or public deployment.
 
 ## Architecture
 
-```
-lib/compuerta/          # canonical core (TypeScript, tested)
-  prng.ts               #   deterministic 32-bit LCG (identical in both languages)
-  percentile.ts         #   p50/p95/p99 (numpy linear method)
-  errors.ts             #   deterministic error taxonomy
-  breaker.ts            #   closed/open/half-open state machine
-  sim.ts                #   seeded outage simulation + baseline (no failover)
-  demo.ts               #   wires config → simulation → numbers
-  data/config.json      #   providers, classes, breaker, outage (committed)
-  fixtures/             #   percentiles/errors/prng/sim.json (shared math, pinned)
-backend/                # same math in Python + pytest (authoritative)
-  src/compuerta/        #   prng/percentile/errors/breaker/sim.py
-  tests/                #   pinned to tests/fixtures/*.json
-app/                    # Next.js landing + demo dashboard (Vercel, demo mode)
-```
+- `app/[lang]/`: localized browser experience.
+- `lib/experience/`: typed local adapter, validation and run traces.
+- `design-system/`: shared visual tokens, locale controls and execution/replay presentation.
+- `app/api/`: optional server integrations; the primary demo does not require them.
 
-The breaker is the **real logic**; the providers are deterministic stand-ins. The whole
-simulation is reproducible because the PRNG, percentiles, taxonomy, and state machine are
-identical in TypeScript and Python (pinned by shared fixtures).
+Technology: Next.js 16, TypeScript, Python, Vitest, pytest, Tailwind CSS v4.
 
-## Design decisions & tradeoffs
+## Evidence and limitations
 
-1. **The breaker runs the real state machine, not a chart.** The demo could have hardcoded a
-   "trip → reroute → recover" timeline, but then the failover logic would be unproven. Here
-   the trip/reopen/recover events are *emergent* from the state machine over a seeded stream.
-2. **Failover preference lists differ by class.** A cheap classification call fails over
-   differently than a long generation call. The demo encodes this: `cheap` prefers `heron`
-   first (fast/cheap), `long` prefers `falcon` (quality) then hedges on latency.
-3. **Hedging is a cost, reported honestly.** Firing a second provider roughly doubles spend
-   on the hedged subset. The demo surfaces the overcost instead of pretending hedging is free.
+Traffic moves through a breaker toward primary or fallback lanes.
 
-## What did not work
+Request lanes and breaker transitions on simulated ticks, not real requests.
 
-- **Availability is 100% because failover always had a healthy provider.** With three
-  providers and one outage, the gateway absorbs it perfectly. A correlated multi-provider
-  outage, or a degraded-queue path for deferrable work, is where availability would dip —
-  that path is out of scope for this demo and documented as the next layer.
+Shows the operational consequence of the routing configuration before an outage drill.
 
-## Run it
+**Limits:** The outage and routing events are local simulations, not provider health signals. These portfolio prototypes do not claim measured production impact.
 
-```bash
-# frontend demo + TS tests
-pnpm install && pnpm dev      # http://localhost:3000
-pnpm test                     # 28 vitest tests
+Inputs use fictional or anonymized examples. Optional live integrations require their own credentials and operational setup. Secrets belong in the configured secret manager, never in local secret files or Git. Use the existing `infisical run -- <command>` workflow when live integration is needed. This repository does not publish or deploy automatically as part of the local demo.
 
-# backend (authoritative math) — Python 3.12+
-cd backend && uv sync --extra dev && uv run pytest   # 6 tests, pinned fixtures
-```
-
-## Stack
-
-Next.js 16 · TypeScript · Vitest · Tailwind v4 · Python 3.13 · pytest
+![Actual English demo capture](docs/images/demo.png)

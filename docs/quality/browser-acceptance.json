@@ -1,0 +1,46 @@
+{
+  "repository": "compuerta",
+  "checks": [
+    {
+      "locale": "en",
+      "htmlLang": "en",
+      "buttons": [
+        "Simulate routing",
+        "Cancel",
+        "Reset"
+      ],
+      "inputs": 2,
+      "clicked": "Simulate routing",
+      "traceEvents": 5,
+      "keyboardFocus": "SELECT",
+      "editingInvalidatesEvidence": true,
+      "resetClearsResult": true,
+      "cancelUsable": true,
+      "languageSwitchWithoutStorage": true
+    },
+    {
+      "locale": "es",
+      "htmlLang": "es",
+      "buttons": [
+        "Simular enrutamiento",
+        "Cancelar",
+        "Reiniciar"
+      ],
+      "inputs": 2,
+      "clicked": "Simular enrutamiento",
+      "traceEvents": 5,
+      "keyboardFocus": "SELECT",
+      "editingInvalidatesEvidence": true,
+      "resetClearsResult": true,
+      "cancelUsable": true,
+      "languageSwitchWithoutStorage": true
+    }
+  ],
+  "errors": [],
+  "legacyRedirectRetainsQuery": true,
+  "unsupportedLocale404": true,
+  "translatedBodyDiffers": true,
+  "reducedMotionDisablesPlayback": true,
+  "mobileNoOverflow": true,
+  "noExternalOrApiRequests": true
+}

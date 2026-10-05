@@ -1,4 +1,4 @@
-"""Deterministic outage simulation — mirrors lib/compuerta/sim.py."""
+"""Deterministic outage simulation — mirrors lib/compuerta/sim.ts."""
 
 from __future__ import annotations
 
@@ -7,6 +7,10 @@ from .prng import lcg_factory
 
 
 def simulate(config: dict) -> dict:
+    maximum = 2**53 - 1
+    for value in [p["costCentsPer1k"] for p in config["providers"]] + [c["tokens"] for c in config["classes"].values()]:
+        if type(value) is not int or not 0 <= value <= maximum:
+            raise ValueError("Rates and token counts must be nonnegative safe integers.")
     rng = lcg_factory(config["lcg"]["seed"], config["lcg"]["a"], config["lcg"]["c"], config["lcg"]["m"])
     providers = {p["id"]: p for p in config["providers"]}
     breakers = {p["id"]: make_breaker(p["id"], config["breaker"]) for p in config["providers"]}
@@ -14,13 +18,22 @@ def simulate(config: dict) -> dict:
     success = 0
     failover = 0
     hedged = 0
-    total_cost = 0.0
+    total_cost = 0
     trips = {p["id"]: 0 for p in config["providers"]}
-    cost_by_tenant = {t: 0.0 for t in config["tenants"]}
-    cost_by_feature = {f: 0.0 for f in config["classes"]}
+    cost_by_tenant = {t: 0 for t in config["tenants"]}
+    cost_by_feature = {f: 0 for f in config["classes"]}
     events: list[dict] = []
 
     outage = config["outage"]
+
+    def add_cost(provider_id: str, tokens: int, tenant: str, feature: str):
+        nonlocal total_cost
+        cost = (tokens * providers[provider_id]["costCentsPer1k"] + 999) // 1000
+        if cost > maximum - total_cost:
+            raise ValueError("Billing exceeds the safe integer range.")
+        total_cost += cost
+        cost_by_tenant[tenant] += cost
+        cost_by_feature[feature] += cost
 
     def provider_response(p: dict, i: int) -> dict:
         err_draw = rng()
@@ -51,20 +64,14 @@ def simulate(config: dict) -> dict:
                 events.append({"tick": i, "provider": provider_id, "kind": ev})
 
             if resp["ok"]:
-                cost = (cls["tokens"] / 1000.0) * p["costPer1k"]
-                total_cost += cost
-                cost_by_tenant[tenant] += cost
-                cost_by_feature[feature] += cost
+                add_cost(provider_id, cls["tokens"], tenant, feature)
                 succeeded = True
 
                 if cls.get("hedged") and resp["latencyMs"] > cls.get("hedgeBudgetMs", float("inf")):
                     hedged += 1
                     hedge_provider = next((x for x in cls["preference"] if x != provider_id), None)
                     if hedge_provider:
-                        hc = (cls["tokens"] / 1000.0) * providers[hedge_provider]["costPer1k"]
-                        total_cost += hc
-                        cost_by_tenant[tenant] += hc
-                        cost_by_feature[feature] += hc
+                        add_cost(hedge_provider, cls["tokens"], tenant, feature)
                 break
 
             failover += 1
@@ -85,9 +92,9 @@ def simulate(config: dict) -> dict:
         "trips": trips,
         "finalBreakerStates": final_states,
         "events": events,
-        "totalCost": total_cost,
-        "costByTenant": cost_by_tenant,
-        "costByFeature": cost_by_feature,
+        "totalCostCents": total_cost,
+        "costCentsByTenant": cost_by_tenant,
+        "costCentsByFeature": cost_by_feature,
     }
 
 
