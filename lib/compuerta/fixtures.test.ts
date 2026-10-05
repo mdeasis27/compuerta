@@ -54,4 +54,11 @@ describe("pinned fixture: simulation", () => {
     expect(Object.values(sim.costCentsByTenant).reduce((a, b) => a + b, 0)).toBe(sim.totalCostCents);
     expect(Object.values(sim.costCentsByFeature).reduce((a, b) => a + b, 0)).toBe(sim.totalCostCents);
   });
+
+  it("logs which provider served every request", () => {
+    const sim = getSimulation();
+    expect(sim.servedBy).toHaveLength(sim.nTicks);
+    expect(sim.servedBy.filter((p) => p !== null).length).toBe(sim.success);
+    expect(sim.servedBy).toEqual((simFixture as { servedBy: (string | null)[] }).servedBy);
+  });
 });

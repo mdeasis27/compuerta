@@ -23,6 +23,7 @@ def simulate(config: dict) -> dict:
     cost_by_tenant = {t: 0 for t in config["tenants"]}
     cost_by_feature = {f: 0 for f in config["classes"]}
     events: list[dict] = []
+    served_by: list[str | None] = []
 
     outage = config["outage"]
 
@@ -52,6 +53,7 @@ def simulate(config: dict) -> dict:
         tenant = config["tenants"][i % len(config["tenants"])]
 
         succeeded = False
+        served_provider = None
         for provider_id in cls["preference"]:
             p = providers[provider_id]
             b = breakers[provider_id]
@@ -66,6 +68,7 @@ def simulate(config: dict) -> dict:
             if resp["ok"]:
                 add_cost(provider_id, cls["tokens"], tenant, feature)
                 succeeded = True
+                served_provider = provider_id
 
                 if cls.get("hedged") and resp["latencyMs"] > cls.get("hedgeBudgetMs", float("inf")):
                     hedged += 1
@@ -78,6 +81,7 @@ def simulate(config: dict) -> dict:
 
         if succeeded:
             success += 1
+        served_by.append(served_provider)
 
     final_states = {p["id"]: breakers[p["id"]]["state"] for p in config["providers"]}
     for p in config["providers"]:
@@ -92,6 +96,7 @@ def simulate(config: dict) -> dict:
         "trips": trips,
         "finalBreakerStates": final_states,
         "events": events,
+        "servedBy": served_by,
         "totalCostCents": total_cost,
         "costCentsByTenant": cost_by_tenant,
         "costCentsByFeature": cost_by_feature,

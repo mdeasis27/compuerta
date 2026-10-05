@@ -81,3 +81,11 @@ def test_simulation_matches_fixture():
     assert sim["costCentsByFeature"] == fixture["costCentsByFeature"]
     assert sum(sim["costCentsByTenant"].values()) == sim["totalCostCents"]
     assert sum(sim["costCentsByFeature"].values()) == sim["totalCostCents"]
+
+
+def test_simulation_logs_served_by_like_typescript():
+    fixture = _load("sim.json")
+    sim = simulate(_config())
+    assert len(sim["servedBy"]) == sim["nTicks"]
+    assert sum(1 for p in sim["servedBy"] if p is not None) == sim["success"]
+    assert sim["servedBy"] == fixture["servedBy"]
