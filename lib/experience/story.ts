@@ -1,7 +1,5 @@
 import type { Heading } from "@/design-system/demo/project-story";
 
-type NodeCopy = { name: string; sub: string; analogy: string };
-
 export interface CompuertaStory {
   name: string;
   oneLiner: string;
@@ -13,7 +11,7 @@ export interface CompuertaStory {
   fit: { heading: Heading; worthLabel: string; worth: string; notLabel: string; not: string };
   proves: { heading: Heading; text: string };
   engineers: { summary: string; points: string[]; repoLabel: string };
-  scene: { title: string; caption: string; statusLabels: { active: string; danger: string; success: string; off: string }; tapeLabel: string; nodes: { clients: NodeCopy; gateway: NodeCopy; primary: NodeCopy; backup: NodeCopy }; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
+  scene: { title: string; caption: string; mapLabel: string; messages: { clear: string; tripOn: string; tripOff: string; reopen: string; recover: string }; road: { highway: string; side: string; arrived: string; closed: string; crash: string }; key: string; ariaLabel: (served: number, total: number) => string; tapeLabel: string; tape: { served: string; rerouted: string; lost: string }; servedOf: (n: number, total: number) => string };
 }
 
 const engineerPointsEn = [
@@ -92,15 +90,13 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     engineers: { summary: "For engineers", points: engineerPointsEn, repoLabel: "Source code" },
     scene: {
       title: "The route each request took",
-      caption: "Watch the main provider turn red during the outage and the requests move to the backup.",
-      statusLabels: { active: "picking the route", danger: "down", success: "on", off: "off" },
+      caption: "Each car is a customer. Cars stuck at the crash got no answer; cars that reach the lot were served.",
+      mapLabel: "Maps app (Compuerta)",
+      messages: { clear: "Route: highway", tripOn: "Crash ahead: taking the side road", tripOff: "Crash ahead: there is no other route", reopen: "Checked the highway: still blocked", recover: "Highway clear again" },
+      road: { highway: "Highway", side: "Side road", arrived: "Arrived at work", closed: "closed", crash: "crash" },
+      key: "Highway: provider A, the main one. Side road: provider B, the backup. Arriving at work: the customer got an answer.",
+      ariaLabel: (n, total) => `${total} cars drive to work, one per customer request. ${n} of ${total} arrived.`,
       tapeLabel: "Thirty customer requests, in order",
-      nodes: {
-        clients: { name: "Customers", sub: "30 requests", analogy: "the cars" },
-        gateway: { name: "Compuerta", sub: "picks the route", analogy: "the maps app" },
-        primary: { name: "Provider A", sub: "main", analogy: "the highway" },
-        backup: { name: "Provider B", sub: "backup", analogy: "the side road" },
-      },
       tape: { served: "served", rerouted: "sent to the backup", lost: "lost" },
       servedOf: (n, total) => `${n} of ${total} customers served`,
     },
@@ -167,15 +163,13 @@ export const STORY: Record<"en" | "es", CompuertaStory> = {
     engineers: { summary: "Para ingenieros", points: engineerPointsEs, repoLabel: "Código fuente" },
     scene: {
       title: "La ruta que tomó cada solicitud",
-      caption: "Mira cómo el proveedor principal se pone en rojo durante la caída y las solicitudes se pasan al respaldo.",
-      statusLabels: { active: "eligiendo la ruta", danger: "caído", success: "activo", off: "apagado" },
+      caption: "Cada coche es un cliente. Los que se atoran en el choque se quedaron sin respuesta; los que llegan al estacionamiento fueron atendidos.",
+      mapLabel: "App de mapas (Compuerta)",
+      messages: { clear: "Ruta: autopista", tripOn: "Choque detectado: te mando por la lateral", tripOff: "Choque detectado: no hay ruta alterna", reopen: "Probé la autopista: sigue cerrada", recover: "Autopista libre otra vez" },
+      road: { highway: "Autopista", side: "Lateral", arrived: "Llegaron al trabajo", closed: "cerrada", crash: "choque" },
+      key: "Autopista: proveedor A, el principal. Lateral: proveedor B, el respaldo. Llegar al trabajo: el cliente recibió su respuesta.",
+      ariaLabel: (n, total) => `${total} coches van al trabajo, uno por cada solicitud de cliente. Llegaron ${n} de ${total}.`,
       tapeLabel: "Treinta solicitudes de clientes, en orden",
-      nodes: {
-        clients: { name: "Clientes", sub: "30 solicitudes", analogy: "los coches" },
-        gateway: { name: "Compuerta", sub: "elige la ruta", analogy: "la app de mapas" },
-        primary: { name: "Proveedor A", sub: "principal", analogy: "la autopista" },
-        backup: { name: "Proveedor B", sub: "respaldo", analogy: "la lateral" },
-      },
       tape: { served: "atendida", rerouted: "enviada al respaldo", lost: "perdida" },
       servedOf: (n, total) => `${n} de ${total} clientes atendidos`,
     },
