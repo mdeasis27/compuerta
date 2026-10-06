@@ -7,7 +7,7 @@ import { OutcomeTape, useReducedMotion } from "@/design-system/demo/project-stor
 import { revealedTicks } from "@/design-system/demo/outcome-tape";
 import type { SimResult } from "@/lib/compuerta/types";
 import type { ExperienceInput } from "./adapter";
-import { carRoutes, roadState, schedule, CRASH_X, ROAD_Y, SIDE_ROAD, TURN_X } from "./scene-state";
+import { carRoutes, roadState, schedule, sceneLaunches, CRASH_X, ROAD_Y, SIDE_ROAD, TURN_X } from "./scene-state";
 import { STORY } from "./story";
 
 const CAR_FILL = { served: "fill-success", rerouted: "fill-info", lost: "fill-danger" } as const;
@@ -21,8 +21,9 @@ export function CompuertaScene({ frame, input, result, locale }: { frame: Playba
   // Cars run on their own clock: the trace reveals them in bursts, the road lets them out one by one.
   const [clock, setClock] = useState<{ key: SimResult; launches: number[]; now: number }>({ key: result, launches: [], now: 0 });
   const launchesRef = useRef<{ key: SimResult; launches: number[] }>({ key: result, launches: [] });
+  const settleNow = reduced || frame.complete;
   useEffect(() => {
-    if (reduced) return;
+    if (settleNow) return;
     let raf = 0;
     const step = (now: number) => {
       const prev = launchesRef.current.key === result ? launchesRef.current.launches : [];
@@ -33,10 +34,10 @@ export function CompuertaScene({ frame, input, result, locale }: { frame: Playba
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
-  }, [input, result, routes, revealed, reduced]);
+  }, [input, result, routes, revealed, settleNow]);
 
-  const launches = reduced ? routes.map(() => -Infinity) : clock.key === result ? clock.launches : [];
-  const s = roadState(input, result, routes, launches, reduced ? 0 : clock.now);
+  const launches = sceneLaunches(routes.length, clock.key === result ? clock.launches : [], settleNow);
+  const s = roadState(input, result, routes, launches, settleNow ? 0 : clock.now);
   const message = s.message === "trip" ? (input.failover ? copy.messages.tripOn : copy.messages.tripOff) : copy.messages[s.message];
 
   return <StoryStage locale={locale} title={copy.title} caption={copy.caption} step={frame.visible} total={frame.total}>
@@ -67,6 +68,7 @@ export function CompuertaScene({ frame, input, result, locale }: { frame: Playba
       {s.cars.map((c, i) => c.launched ? <g key={i} transform={`translate(${c.x.toFixed(1)} ${c.y.toFixed(1)})`} data-car={c.arrived ? c.kind : "driving"}>
         <rect x="-7" y="-4.5" width="14" height="9" rx="2" className={c.arrived ? CAR_FILL[c.kind] : "fill-foreground/60"} />
         {c.arrived && c.kind === "lost" ? <path d="M-3 -3 l6 6 m0 -6 l-6 6" className="stroke-white" strokeWidth="1.5" /> : null}
+        {c.arrived && c.kind === "rerouted" ? <path d="M0 -4.5 v9" className="stroke-white" strokeWidth="2" /> : null}
       </g> : null)}
     </svg>
     <p className="mt-3 text-xs leading-5 text-muted-foreground">{copy.key}</p>

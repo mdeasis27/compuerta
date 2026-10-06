@@ -1,6 +1,6 @@
 import { expect, test } from "vitest";
 import { runExperience } from "./adapter";
-import { COMPLETE_FRAME, carRoutes, roadState, schedule, GAP_MS, ROAD_Y, CRASH_X } from "./scene-state";
+import { COMPLETE_FRAME, carRoutes, roadState, schedule, sceneLaunches, GAP_MS, ROAD_Y, CRASH_X } from "./scene-state";
 import { revealedTicks, tapeCells } from "@/design-system/demo/outcome-tape";
 
 const signal = new AbortController().signal;
@@ -72,4 +72,16 @@ test("an outage too short to trip the breaker still shows the full result", asyn
   expect(revealed).toBe(30);
   const s = roadState(input, r.result.protected, carRoutes(r.result.protected.servedBy), allArrived(revealed), 0);
   expect(s.cells.includes("pending")).toBe(false);
+});
+
+test("once the trace completes, cars still queued on the road clock land at once so the scene matches section 03", async () => {
+  const { input, result } = await run(20, true);
+  const routes = carRoutes(result.servedBy);
+  const behind = schedule([], 30, 0);
+  const now = behind[5];
+  expect(roadState(input, result, routes, sceneLaunches(routes.length, behind, false), now).settled).toBe(false);
+  const s = roadState(input, result, routes, sceneLaunches(routes.length, behind, true), now);
+  expect(s.settled).toBe(true);
+  expect(s.served).toBe(result.success);
+  expect(s.cells).toEqual(tapeCells(result.servedBy, "primary", 30));
 });

@@ -59,6 +59,11 @@ export function schedule(prev: readonly number[], revealed: number, now: number)
   return launches;
 }
 
+/** Once the trace is done (or motion is reduced) every car lands at once, so the scene never lags behind the final result. */
+export function sceneLaunches(n: number, clockLaunches: readonly number[], settleNow: boolean): readonly number[] {
+  return settleNow ? Array<number>(n).fill(-Infinity) : clockLaunches;
+}
+
 export function roadState(input: ExperienceInput, result: SimResult, routes: readonly CarRoute[], launches: readonly number[], now: number) {
   const cars = launches.map((at, i) => {
     const { kind, route, length } = routes[i];
